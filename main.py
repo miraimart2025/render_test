@@ -1,8 +1,10 @@
 import os
+import json
+import tempfile
+import gspread
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,17 +23,22 @@ class ContactForm(BaseModel):
     email: str
     message: str
 
-# 認証設定
+# 環境変数からサービスアカウントのJSON文字列を取得
+json_str = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+if not json_str:
+    raise ValueError("環境変数 'GOOGLE_SERVICE_ACCOUNT_JSON' が設定されていません。")
+
+# 一時ファイルに書き込む
+with tempfile.NamedTemporaryFile(mode="w+", delete=False, suffix=".json") as temp_file:
+    temp_file.write(json_str)
+    temp_file_path = temp_file.name
+
+# 認証とシート操作
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
-
-json_path = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
-if not json_path:
-    raise FileNotFoundError("環境変数 'GOOGLE_SERVICE_ACCOUNT_JSON' が設定されていません。")
-
-creds = ServiceAccountCredentials.from_json_keyfile_name(json_path, scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name(temp_file_path, scope)
 client = gspread.authorize(creds)
 spreadsheet = client.open("問い合わせ一覧")
 sheet = spreadsheet.sheet1
