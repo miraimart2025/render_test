@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime
@@ -7,12 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 実運用なら許可したいオリジンを指定
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # OPTIONSやPOSTを許可
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -21,16 +21,18 @@ class ContactForm(BaseModel):
     email: str
     message: str
 
-# Google Sheets API の認証
+# 認証設定
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = ServiceAccountCredentials.from_json_keyfile_name("GOOGLE_SERVICE_ACCOUNT_JSON", scope)
-client = gspread.authorize(creds)
+json_path = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+if not json_path:
+    raise FileNotFoundError("環境変数 'GOOGLE_SERVICE_ACCOUNT_JSON' が設定されていません。")
 
-# スプレッドシートを開く
+creds = ServiceAccountCredentials.from_json_keyfile_name(json_path, scope)
+client = gspread.authorize(creds)
 spreadsheet = client.open("問い合わせ一覧")
 sheet = spreadsheet.sheet1
 
