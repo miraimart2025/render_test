@@ -27,7 +27,7 @@ scope = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = ServiceAccountCredentials.from_json_keyfile_name("winged-acolyte-462314-f0-a9815c766376.json", scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name("GOOGLE_SERVICE_ACCOUNT_JSON", scope)
 client = gspread.authorize(creds)
 
 # スプレッドシートを開く
