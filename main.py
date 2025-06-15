@@ -45,6 +45,7 @@ sheet = spreadsheet.sheet1
 
 @app.post("/contact")
 def receive_contact(form: ContactForm):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("Asia/Tokyo")).strftime("%Y-%m-%d %H:%M:%S")
     sheet.append_row([form.name, form.email, form.message, now])
     return {"message": "スプレッドシートに保存しました！"}
